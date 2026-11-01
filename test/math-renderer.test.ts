@@ -2,8 +2,9 @@ import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { FormulaCache } from "../src/formula-cache.js";
+import { resetRasterWorkerState } from "../src/resvg-client.js";
 import {
   mathRendererInternals,
   MathRenderError,
@@ -77,6 +78,10 @@ function renderTestRegion(
 }
 
 describe("MathRenderer", () => {
+  afterEach(() => {
+    resetRasterWorkerState();
+  });
+
   it("reads MathJax ex dimensions", () => {
     expect(readSvgDimensions('<svg width="10ex" height="2.5ex" viewBox="0 0 4000 1000"></svg>'))
       .toEqual({ aspectRatio: 4, heightEx: 2.5, depthEx: 0 });
@@ -180,6 +185,29 @@ describe("MathRenderer", () => {
     expect(svg.match(/id="formula-content"/gu)).toHaveLength(1);
   });
 
+  it("keeps source masks limited to their source segments", async () => {
+    const svg = mathRendererInternals.buildSourceMaskedSvg({
+      canvasWidth: 360,
+      canvasHeight: 54,
+      sourceSegments: [
+        { rowOffset: 1, startCol: 4, endCol: 12, logicalStartCol: 0 }
+      ],
+      cell: { width: 9, height: 18, source: "cell-query" },
+      background: "#202030",
+      content: '<path d="M0 0h10v10H0z" fill="#eeeeee"/>'
+    });
+    expect(svg).toContain('<rect x="36" y="18" width="72" height="18" fill="#202030"/>');
+    expect(svg).toContain('width="360" height="54" viewBox="0 0 360 54"');
+    expect(svg).not.toContain('<rect x="0"');
+    const sharp = await import("../src/sharp-loader.js").then(({ loadSharp }) => loadSharp());
+    const { data, info } = await sharp(await mathRendererInternals.renderSvgToPng(svg, false))
+      .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const outsideMask = ((0 * info.width + 200) * 4) + 3;
+    const maskPixel = ((1 * 18 + 1) * info.width + 4 * 9 + 1) * 4 + 3;
+    expect(data[outsideMask]).toBe(0);
+    expect(data[maskPixel]).toBeGreaterThan(0);
+  });
+
   it("contains native Resvg panics and restarts the isolated rasterizer", async () => {
     const resvgPanic = [
       '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">',
@@ -189,6 +217,7 @@ describe("MathRenderer", () => {
     ].join("");
     await expect(mathRendererInternals.renderSvgToPng(resvgPanic, false))
       .rejects.toMatchObject({ code: "raster-error" });
+    await new Promise((resolve) => setTimeout(resolve, 1_050));
     await expect(mathRendererInternals.renderSvgToPng(
       '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><rect width="2" height="2"/></svg>',
       false
@@ -456,6 +485,43 @@ describe("MathRenderer", () => {
     expect(png.subarray(1, 4).toString()).toBe("PNG");
     expect(png.readUInt32BE(16)).toBe(270);
     expect(png.readUInt32BE(20)).toBe(108);
+  });
+
+  it("does not paint the unused canvas around a fitted formula", async () => {
+    const rendered = await renderTestRegion(new MathRenderer(),
+      {
+        startRow: 0,
+        endRow: 3,
+        startCol: 0,
+        endCol: 40,
+        latex: "x=1",
+        display: true,
+        confidence: "explicit"
+      },
+      40,
+      4,
+      {
+        kittyGraphics: true,
+        foreground: "#eeeeee",
+        background: "#202030",
+        cell: { width: 9, height: 18, source: "cell-query" }
+      },
+      0.5
+    );
+    const png = Buffer.from(rendered.png);
+    const sharp = await import("../src/sharp-loader.js").then(({ loadSharp }) => loadSharp());
+    const { data, info } = await sharp(png).ensureAlpha().raw()
+      .toBuffer({ resolveWithObject: true });
+    const outside = (info.width - 1) * 4;
+    expect(data[outside + 3]).toBe(0);
+    let hasInk = false;
+    for (let offset = 3; offset < data.length; offset += 4) {
+      if (data[offset] > 0) {
+        hasInk = true;
+        break;
+      }
+    }
+    expect(hasInk).toBe(true);
   });
 
   it("renders one-row reader math as a tight natural-size PNG", async () => {

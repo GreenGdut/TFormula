@@ -1,4 +1,4 @@
-# TFormula
+# gtformula
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
@@ -8,7 +8,7 @@
 TFormula 最核心的用法就是：
 
 ```sh
-tformula codex
+gtformula opencode
 ```
 
 Codex 仍然是原来的 Codex CLI，但回答中的公式会在终端中原位渲染，不再停留为
@@ -17,8 +17,8 @@ Codex 仍然是原来的 Codex CLI，但回答中的公式会在终端中原位�
 每个成功渲染的公式也会立即变成可复用内容，不需要重新选择或输入：
 
 ```sh
-tformula copy mathml       # 最近公式 -> 剪贴板
-tformula save formula.png  # 最近公式 -> 高清图片
+gtformula copy mathml       # 最近公式 -> 剪贴板
+gtformula save formula.png  # 最近公式 -> 高清图片
 ```
 
 > **推荐在 Ghostty 中使用。** TFormula 主要基于 Ghostty 开发和测试，也支持
@@ -39,13 +39,13 @@ headless 终端画面，检测其中的 TeX，使用本地 MathJax 渲染，再�
 `sharp` 图片管线执行原生安装脚本：
 
 ```sh
-npm install -g tformula --allow-scripts=node-pty --allow-scripts=sharp
+npm install -g gtformula --allow-scripts=node-pty --allow-scripts=sharp
 ```
 
 然后通过 TFormula 启动 Codex：
 
 ```sh
-tformula codex
+gtformula opencode
 ```
 
 完整集成只有这一步，不需要安装 Codex 插件，也不需要修改 Codex 配置。Codex
@@ -64,41 +64,41 @@ tformula codex
 
 | Agent | 命令 |
 |---|---|
-| OpenAI Codex | `tformula codex` |
-| Claude Code | `tformula claude` |
-| Cursor Agent | `tformula agent` |
-| Pi coding agent | `tformula pi` |
-| Gemini CLI | `tformula gemini` |
-| OpenCode | `tformula opencode` |
-| Aider | `tformula aider` |
-| Goose | `tformula goose` |
-| Qwen Code | `tformula qwen` |
-| 任意其他 CLI Agent | `tformula -- <agent命令> [参数...]` |
+| OpenCode | `gtformula opencode` |
+| OpenAI Codex | `gtformula codex` |
+| Claude Code | `gtformula claude` |
+| Cursor Agent | `gtformula agent` |
+| Pi coding agent | `gtformula pi` |
+| Gemini CLI | `gtformula gemini` |
+| Aider | `gtformula aider` |
+| Goose | `gtformula goose` |
+| Qwen Code | `gtformula qwen` |
+| 任意其他 CLI Agent | `gtformula -- <agent命令> [参数...]` |
 
 `--shell` 会启动一个增强的登录 Shell。在这个 Shell 中启动命令时，不需要
 为每一个 Agent 单独创建别名：
 
 ```sh
-tformula --shell
+gtformula --shell
 ```
 
-不带参数运行 `tformula` 等价于 `tformula --shell`。
+不带参数运行 `gtformula` 等价于 `gtformula --shell`。
 
 ## Markdown 阅读器
 
 把 Markdown、文本或图片路径作为参数传入，即可进入 TFormula 的全屏阅读视图：
 
 ```sh
-tformula README.md
-tformula notes.txt
-tformula assets/tformula-maxwell.png
+gtformula README.md
+gtformula notes.txt
+gtformula assets/tformula-maxwell.png
 ```
 
 常见文档扩展名会自动识别。其他 UTF-8 文本文件可用 `--read` 显式打开，避免与
 要执行的命令产生歧义：
 
 ```sh
-tformula --read package.json
+gtformula --read package.json
 ```
 
 阅读器会先把 Markdown 解析为文档树，再按当前终端宽度重新排版。标题、强调、
@@ -107,6 +107,8 @@ tformula --read package.json
 换行，不再用省略号丢弃尾部内容。本地 PNG、JPEG、WebP、GIF、AVIF、TIFF、
 HEIF 和 SVG 图片会转换为终端 PNG，并保持宽高比；即使 PDF/OCR 转换器把图注
 或页眉粘在图片所在段落中，图片仍会正常绘制。
+本地图片也支持 Obsidian 的 `![[图片.png]]`、`![[figures/图片.png]]` 写法，
+路径相对于当前 Markdown 文档解析。
 
 阅读器会实时监听当前文档及其引用的本地图片。在编辑器中保存后，渲染视图会自动
 刷新，无需重启 TFormula。基于目录的监听兼容“临时文件写入后原子替换”的保存
@@ -169,31 +171,31 @@ PDF/OCR 导出的 Markdown 经常把公式内容写在独立公式分隔符同�
 因此终端 resize、图片传输重试和 Agent 重复输出不会产生重复条目。查看最近的公式：
 
 ```sh
-tformula history
-tformula history --limit 50
-tformula history --json
+gtformula history
+gtformula history --limit 50
+gtformula history --json
 ```
 
 历史列表会显示可用作导出选择器的短 ID。最直接的用法始终操作最近一个公式：
 
 ```sh
-tformula copy                 # 原始 LaTeX -> 剪贴板
-tformula copy mathml          # MathML -> 剪贴板
-tformula save formula.png     # 高清 PNG
-tformula save formula.svg     # 自包含 SVG
+gtformula copy                 # 原始 LaTeX -> 剪贴板
+gtformula copy mathml          # MathML -> 剪贴板
+gtformula save formula.png     # 高清 PNG
+gtformula save formula.svg     # 自包含 SVG
 ```
 
 目标不是最近一个公式时，指定完整 ID 或唯一的 ID 前缀：
 
 ```sh
-tformula copy 12ab34cd markdown
-tformula save 12ab34cd formula.mathml
-tformula save 12ab34cd formula.png --scale 6 --color navy --background white
+gtformula copy 12ab34cd markdown
+gtformula save 12ab34cd formula.mathml
+gtformula save 12ab34cd formula.png --scale 6 --color navy --background white
 ```
 
 `save` 会根据文件扩展名选择格式，也可用 `--as <格式>` 覆盖。原来的 `export`
 命令继续保留，适合脚本和 stdout 管道，例如
-`tformula export --last --format html`。
+`gtformula export --last --format html`。
 
 | 格式 | `copy` / `--as` 名称 | 输出规格 |
 |---|---|---|
@@ -211,7 +213,7 @@ tformula save 12ab34cd formula.png --scale 6 --color navy --background white
 使用 `wl-copy` 或 `xclip`。
 
 历史文件包含原始 LaTeX 明文，目录权限为 `0700`、文件权限为 `0600`。不希望
-记录时可使用 `--no-history`，已有历史可通过 `tformula history --clear` 删除。
+记录时可使用 `--no-history`，已有历史可通过 `gtformula history --clear` 删除。
 `TFORMULA_HISTORY_DIR` 可以覆盖默认历史目录。
 
 ## 环境要求
@@ -231,7 +233,7 @@ cd TFormula
 npm install
 npm run check
 npm link
-tformula codex
+gtformula codex
 ```
 
 ## 公式大小
@@ -277,14 +279,14 @@ headless 画面错位而停留为原始 TeX。相关回归测试覆盖了不同�
 如果终端无法返回单元格像素尺寸，默认使用 9×18 像素。也可以手动指定：
 
 ```sh
-tformula --cell-size 10x20 claude
+gtformula --cell-size 10x20 claude
 ```
 
 默认公式比例为 1.0，可以独立调整：
 
 ```sh
-tformula --scale 1.1 codex
-TFORMULA_SCALE=0.9 tformula --shell
+gtformula --scale 1.1 codex
+TFORMULA_SCALE=0.9 gtformula --shell
 ```
 
 TFormula 还会测量公式为了装入安全画布而保留的自然尺寸比例。默认最低可读比例为
@@ -292,8 +294,8 @@ TFormula 还会测量公式为了装入安全画布而保留的自然尺寸比�
 也可以设为零以禁用这一降级策略：
 
 ```sh
-tformula --min-readable-scale 0.6 codex
-TFORMULA_MIN_READABLE_SCALE=0 tformula claude
+gtformula --min-readable-scale 0.6 codex
+TFORMULA_MIN_READABLE_SCALE=0 gtformula claude
 ```
 
 后台扫描还要求新识别的公式区域保持 80 毫秒不变后才上传图片。因此被快速从
@@ -301,8 +303,8 @@ TFORMULA_MIN_READABLE_SCALE=0 tformula claude
 该静默期，避免长回答把尚未渲染的公式滚出屏幕。可以调整或禁用延迟：
 
 ```sh
-tformula --stability-ms 150 codex
-TFORMULA_STABILITY_MS=0 tformula claude
+gtformula --stability-ms 150 codex
+TFORMULA_STABILITY_MS=0 gtformula claude
 ```
 
 按 `Ctrl-]` 可将最近识别的公式显示在覆盖整个终端的高 z-index 聚焦层中。聚焦时，
@@ -310,8 +312,8 @@ TFORMULA_STABILITY_MS=0 tformula claude
 `Ctrl-]` 退出；这些按键由 TFormula 消费，不会泄漏给 Agent。可以修改或禁用快捷键：
 
 ```sh
-tformula --focus-key ctrl-f codex
-TFORMULA_FOCUS_KEY=none tformula claude
+gtformula --focus-key ctrl-f codex
+TFORMULA_FOCUS_KEY=none gtformula claude
 ```
 
 ## Agent 提示词模板
@@ -345,10 +347,10 @@ TFormula 不模拟完整的 LaTeX 发行版：TikZ、`chemfig` 和外部图片�
 专业记号和 Unicode 回退字体可以通过进程级环境变量配置：
 
 ```sh
-TFORMULA_MATH_MACROS='{"RR":"\\mathbb{R}","vect":["\\mathbf{#1}",1]}' tformula codex
-TFORMULA_MATH_ENVIRONMENTS='{"braced":["\\left\\{","\\right\\}"]}' tformula claude
-TFORMULA_FONT_FILES='/path/math.ttf:/path/text.otf' tformula pi
-TFORMULA_SYSTEM_FONTS=false tformula codex
+TFORMULA_MATH_MACROS='{"RR":"\\mathbb{R}","vect":["\\mathbf{#1}",1]}' gtformula codex
+TFORMULA_MATH_ENVIRONMENTS='{"braced":["\\left\\{","\\right\\}"]}' gtformula claude
+TFORMULA_FONT_FILES='/path/math.ttf:/path/text.otf' gtformula pi
+TFORMULA_SYSTEM_FONTS=false gtformula codex
 ```
 
 宏和环境采用 MathJax `configmacros` 定义，名称开头的反斜杠可省略；字体路径使用
@@ -395,16 +397,16 @@ $XDG_CACHE_HOME/tformula
 可以修改目录或默认的 256 MB 上限：
 
 ```sh
-TFORMULA_CACHE_DIR=/path/to/cache tformula codex
-TFORMULA_CACHE_MAX_MB=512 tformula claude
-TFORMULA_READER_MAX_IMAGES=128 tformula README.md
+TFORMULA_CACHE_DIR=/path/to/cache gtformula codex
+TFORMULA_CACHE_MAX_MB=512 gtformula claude
+TFORMULA_READER_MAX_IMAGES=128 gtformula README.md
 ```
 
 不启动 PTY 会话也可以检查或清空公式缓存：
 
 ```sh
-tformula cache status
-tformula cache clear
+gtformula cache status
+gtformula cache clear
 ```
 
 ## 可识别的公式
@@ -456,8 +458,8 @@ $ ... $
 当 Agent 参数可能被误认为 TFormula 参数时，使用 `--` 分隔：
 
 ```sh
-tformula -- claude --resume
-tformula -- opencode --continue
+gtformula -- claude --resume
+gtformula -- opencode --continue
 ```
 
 ## 安全与降级行为

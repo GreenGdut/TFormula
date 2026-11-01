@@ -1,3 +1,4 @@
+
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 if (process.stdin.isTTY && typeof process.stdin.setRawMode === "function") {
@@ -27,6 +28,7 @@ if (mode === "idle-pending-resize") {
   // Stay completely idle long enough for the post-resize scan. If TFormula
   // cannot restore pending-wrap, no later child output is available to hide
   // the bug by triggering another scan.
+  await delay(1_200);
   await delay(1_200);
 } else if (mode === "exit-during-probe") {
   await delay(25);

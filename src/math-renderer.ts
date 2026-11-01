@@ -43,6 +43,9 @@ export type MathRenderFailureCode =
   | "png-limit"
   | "raster-error";
 
+export const RENDERER_COOLDOWN_MESSAGE = "formula rasterization paused after an isolated renderer crash";
+export const RENDER_REQUEST_SUPERSEDED_MESSAGE = "formula rasterization request superseded by a newer viewport";
+
 export class MathRenderError extends Error {
   constructor(readonly code: MathRenderFailureCode, message: string) {
     super(message);
@@ -52,7 +55,7 @@ export class MathRenderError extends Error {
 
 let mathJaxPromise: Promise<MathJaxApi> | undefined;
 const MATHJAX_CACHE_VERSION = "mathjax-4.1.3-scientific-svg-v6";
-const PNG_CACHE_VERSION = "resvg-2.6.2-terminal-canvas-v7";
+const PNG_CACHE_VERSION = "resvg-2.6.2-terminal-canvas-transparent-v8";
 const CANONICAL_CONTAINER_WIDTH = 100_000;
 const MATHJAX_EX_PX = 8;
 export const MAX_FORMULA_LENGTH = 20_000;
@@ -798,7 +801,9 @@ export class MathRenderer {
         })
       : [
           `<svg xmlns="http://www.w3.org/2000/svg" width="${geometry.canvasWidth}" height="${geometry.canvasHeight}" viewBox="0 0 ${geometry.canvasWidth} ${geometry.canvasHeight}">`,
-          `<rect width="100%" height="100%" fill="${escapeAttribute(background)}"/>`,
+          // The ordinary formula canvas is transparent. Kitty keeps the
+          // placement geometry, while unused cell area must reveal the real
+          // terminal background instead of a baked-in black rectangle.
           content,
           "</svg>"
         ].join("");

@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import { StringDecoder } from "node:string_decoder";
 import * as pty from "node-pty";
 import { containsFormulaTrigger } from "./detect.js";
+import { FocusKeyDecoder } from "./focus-key-decoder.js";
 import { FormulaFocusInput, type FormulaFocusAction } from "./formula-focus.js";
 import { FormulaHistoryStore } from "./formula-history.js";
 import { FormulaScreen } from "./screen.js";
@@ -72,6 +73,7 @@ export async function runProxy(
   let startupProbeCapture = "";
   let startupProbeSawChildOutput = false;
   let responseTailTimer: NodeJS.Timeout | undefined;
+  let focusTailTimer: NodeJS.Timeout | undefined;
   let latestLayoutEpoch = 0;
   let exiting = false;
   let outputQueue = Promise.resolve();
@@ -104,7 +106,6 @@ export async function runProxy(
         // Arguments can contain API tokens or private prompts. Keep only the
         // executable name in persistent history metadata.
         command: [options.command],
-        cwd: options.cwd,
         debug
       })
     : undefined;
@@ -135,6 +136,7 @@ export async function runProxy(
   const focusInput = screen && options.focusKey
     ? new FormulaFocusInput(options.focusKey)
     : undefined;
+  const focusKeyDecoder = new FocusKeyDecoder(new Set([options.focusKey].filter(Boolean)));
   const responseFilter = new TerminalResponseFilter((imageId) =>
     imageId === KITTY_QUERY_IMAGE_ID
       || isRuntimeProbeQueryId(imageId)
@@ -373,7 +375,10 @@ export async function runProxy(
     cols,
     rows,
     cwd: options.cwd,
-    env: { ...process.env, TFORMULA_ACTIVE: "1" } as Record<string, string>
+    env: {
+      ...process.env,
+      TFORMULA_ACTIVE: "1",
+    } as Record<string, string>
   });
 
   if (startupProbeQuarantine) {
@@ -386,26 +391,28 @@ export async function runProxy(
   const previousRaw = process.stdin.isRaw;
   if (process.stdin.isTTY && typeof process.stdin.setRawMode === "function") process.stdin.setRawMode(true);
   process.stdin.resume();
-  const applyFocusAction = async (action: FormulaFocusAction): Promise<void> => {
-    if (!screen || !focusInput) return;
+  const applyFocusAction = async (
+    action: FormulaFocusAction,
+    input: FormulaFocusInput | undefined
+  ): Promise<void> => {
+    if (!screen || !input) return;
     if (action === "close") {
       await screen.closeFormulaFocus();
-      focusInput.setActive(false);
+      input.setActive(false);
       return;
     }
     const active = action === "open"
-      ? await screen.focusLatestFormula()
-      : action === "next"
-        ? await screen.focusNextFormula()
-        : await screen.focusPreviousFormula();
-    focusInput.setActive(active || screen.formulaFocusActive);
+        ? await screen.focusLatestFormula()
+        : action === "next" ? await screen.focusNextFormula() : await screen.focusPreviousFormula();
+    input.setActive(active || screen.formulaFocusActive);
   };
   const routeInput = (input: string): void => {
     if (!input) return;
-    const focused = focusInput?.handle(input);
-    const data = focused?.residual ?? input;
-    for (const action of focused?.actions ?? []) {
-      enqueueScreenOperation(() => applyFocusAction(action));
+    const activeInput = focusInput?.active ? focusInput : undefined;
+    const formulaHandled = (activeInput ?? focusInput)?.handle(input);
+    const data = formulaHandled?.residual ?? input;
+    for (const action of formulaHandled?.actions ?? []) {
+      enqueueScreenOperation(() => applyFocusAction(action, activeInput ?? focusInput));
     }
     if (!data) return;
     if (!startupProbeQuarantine && !probeActive
@@ -425,6 +432,18 @@ export async function runProxy(
     // by the streaming filter; all definite residual bytes reach the Agent now.
     if (filtered.residual) child.write(filtered.residual);
   };
+  const routeTerminalInput = (input: string): void => {
+    if (focusTailTimer) clearTimeout(focusTailTimer);
+    focusTailTimer = undefined;
+    const focused = Boolean(focusInput?.active);
+    routeInput(focusKeyDecoder.push(input, focused));
+    if (focusKeyDecoder.hasPending) {
+      focusTailTimer = setTimeout(() => {
+        focusTailTimer = undefined;
+        routeInput(focusKeyDecoder.flush());
+      }, 60);
+    }
+  };
   process.stdin.on("data", (chunk: Buffer | string) => {
     if (responseTailTimer) clearTimeout(responseTailTimer);
     responseTailTimer = undefined;
@@ -433,7 +452,7 @@ export async function runProxy(
     // Preserve stream order for the runtime barrier: every untagged cell/theme
     // response in this chunk must be recorded before its tagged Kitty ACK can
     // complete the generation.
-    routeInput(filtered.residual);
+    routeTerminalInput(filtered.residual);
     for (const response of filtered.graphics) {
       if (response.imageId === KITTY_QUERY_IMAGE_ID) {
         // A delayed startup capability ACK belongs to TFormula, but is not a
@@ -501,7 +520,7 @@ export async function runProxy(
       // without making Escape unusable in the child TUI.
       responseTailTimer = setTimeout(() => {
         responseTailTimer = undefined;
-        routeInput(responseFilter.flush());
+        routeTerminalInput(responseFilter.flush());
       }, responseFilter.hasConfirmedGraphicsResponse ? 1_000 : 20);
     }
   });
@@ -577,7 +596,9 @@ export async function runProxy(
             screen.cancelQueuedWrite();
             realCursorCatchupQueued = false;
           }
-          if (slice.checkpoint && !scannedBeforeHeldCell) await screen.flushScan(true);
+          if (slice.checkpoint && !scannedBeforeHeldCell && !screen.decorationsPaused) {
+            await screen.flushScan(true);
+          }
           if (screen.formulaFocusActive) await screen.refreshFormulaFocus();
         } catch (error) {
           // Match the former one-operation-per-slice queue semantics: a bad
@@ -676,6 +697,8 @@ export async function runProxy(
           await formulaHistory?.flush();
           if (responseTailTimer) clearTimeout(responseTailTimer);
           responseTailTimer = undefined;
+          if (focusTailTimer) clearTimeout(focusTailTimer);
+          focusTailTimer = undefined;
           const outputTail = outputTransformer.flush();
           if (outputTail) await terminalWriter.write(outputTail);
           screen?.dispose();
