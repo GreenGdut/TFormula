@@ -21,8 +21,9 @@ gtformula copy mathml       # 最近公式 -> 剪贴板
 gtformula save formula.png  # 最近公式 -> 高清图片
 ```
 
-> **推荐在 Ghostty 中使用。** TFormula 主要基于 Ghostty 开发和测试，也支持
-> Kitty、WezTerm 等实现了 Kitty Graphics Protocol 的终端。
+> **主要目标终端是 Kitty。** 当前 gtformula 维护分支重点优化 Kitty 图形协议下的
+> 公式 placement、滚动、重绘和图像传输性能。Ghostty、WezTerm 等 Kitty 图形协议
+> 实现兼容的终端也可以使用。
 
 TFormula 是一个与 Agent 无关的 PTY 代理。它不调用 Codex、Claude、Gemini
 或其他 Agent 的专用 API，因此只要 Agent 能在终端中运行，就可以尝试使用
@@ -33,7 +34,7 @@ headless 终端画面，检测其中的 TeX，使用本地 MathJax 渲染，再�
 图形协议把公式图片覆盖到原始文字上。原始 LaTeX 仍保留在终端缓冲区中，
 可以正常复制。
 
-## 快速开始：在 Ghostty 中运行 OpenCode
+## 快速开始：在 Kitty 中运行 OpenCode
 
 推荐全局安装 gtformula。使用 npm 11 时，需要允许 `node-pty` 和阅读器的
 `sharp` 图片管线执行原生安装脚本：
@@ -53,10 +54,11 @@ gtformula opencode
 
 ## 效果预览
 
-下面展示了在 Ghostty 中运行 OpenCode、介绍麦克斯韦方程时的效果。gtformula
-会检测实时终端输出中的 LaTeX，并在不替换周围文字的情况下原位渲染公式。
+下面展示了在 Kitty 兼容终端中运行 OpenCode、介绍麦克斯韦方程时的效果。当前维护的
+渲染路径针对 Kitty 图形协议优化；gtformula 会检测实时终端输出中的 LaTeX，并在不
+替换周围文字的情况下原位渲染公式。
 
-![gtformula 在 Ghostty 中渲染 OpenCode 输出的麦克斯韦方程](assets/tformula-maxwell.png)
+![gtformula 在 Kitty 兼容终端中渲染 OpenCode 输出的麦克斯韦方程](assets/tformula-maxwell.png)
 
 ## 其他 CLI Agent
 
@@ -218,12 +220,12 @@ gtformula save 12ab34cd formula.png --scale 6 --color navy --background white
 
 ## 环境要求
 
-- 推荐 Ghostty；也支持 Kitty、WezTerm 或其他兼容 Kitty 图形协议的终端
+- 推荐 Kitty；也支持 Ghostty、WezTerm 或其他兼容 Kitty 图形协议的终端
 - macOS 或 Linux
 - Node.js 20 或更高版本
 - 需要运行的 CLI Agent
 
-当前实现主要基于 Ghostty 1.3.1 开发和验证。
+当前实现主要围绕 Kitty 图形协议维护和验证；Ghostty、WezTerm 作为兼容目标保留。
 
 ## 从源码安装
 

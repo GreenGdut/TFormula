@@ -23,9 +23,10 @@ gtformula copy mathml       # latest formula -> clipboard
 gtformula save formula.png  # latest formula -> high-resolution image
 ```
 
-> **Ghostty is the recommended terminal.** TFormula is developed and tested
-> primarily with Ghostty and also works with terminals that implement the Kitty
-> graphics protocol, including Kitty and WezTerm.
+> **Kitty is the primary target terminal.** This gtformula maintenance branch
+> focuses on Kitty graphics performance, formula placement, scrolling, and
+> repaint behavior. Ghostty and WezTerm are also supported when their Kitty
+> graphics implementations behave compatibly.
 
 TFormula is a terminal-agnostic PTY proxy. It does not use Codex, Claude,
 Gemini, or any other agent-specific API.
@@ -36,7 +37,7 @@ visible TeX, renders it locally with MathJax, and places the result over the
 source text using the Kitty graphics protocol. The original text remains in
 the terminal buffer for copying.
 
-## Quick start: OpenCode in Ghostty
+## Quick start: OpenCode in Kitty
 
 Install gtformula globally. With npm 11, allow the native setup scripts used by
 `node-pty` and the reader's `sharp` image pipeline:
@@ -56,11 +57,13 @@ install. OpenCode itself must already be installed and available on your `PATH`.
 
 ## See it in action
 
-This example shows OpenCode explaining Maxwell's equations in Ghostty.
-gtformula detects the LaTeX in the live terminal output and renders the equations
-in place without replacing the surrounding text.
+This example shows OpenCode explaining Maxwell's equations in a Kitty-compatible
+terminal. The maintained rendering path is optimized for Kitty's graphics
+protocol and keeps the surrounding terminal text interactive. gtformula detects
+the LaTeX in the live terminal output and renders the equations in place without
+replacing the surrounding text.
 
-![gtformula rendering OpenCode's Maxwell equations in Ghostty](assets/tformula-maxwell.png)
+![gtformula rendering OpenCode's Maxwell equations in a Kitty-compatible terminal](assets/tformula-maxwell.png)
 
 ## Other CLI agents
 
@@ -245,12 +248,13 @@ History contains plaintext LaTeX, so its directory is restricted to mode
 
 ## Requirements
 
-- Ghostty recommended; Kitty, WezTerm, or another Kitty-graphics terminal
+- Kitty recommended; Ghostty, WezTerm, or another Kitty-graphics terminal
 - macOS or Linux
 - Node.js 20 or newer
 - The CLI agent you want to run
 
-The current implementation has been developed against Ghostty 1.3.1.
+The current implementation is maintained and verified against Kitty's graphics
+protocol. Ghostty and WezTerm remain compatibility targets.
 
 ## Install from this checkout
 
