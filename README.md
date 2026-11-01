@@ -5,15 +5,15 @@
 Render scientific LaTeX directly inside **OpenCode** and any other CLI agent,
 while keeping the terminal fully interactive.
 
-The primary TFormula workflow is intentionally this simple:
+The primary gtformula workflow is intentionally this simple:
 
 ```sh
 gtformula opencode
 ```
 
-Codex continues to behave like the normal Codex CLI, but formulas in its live
-output are rendered in place instead of remaining as raw TeX. The Markdown and
-image reader is an additional mode for opening documents from the terminal.
+OpenCode continues to behave like the normal OpenCode CLI, but formulas in its
+live output are rendered in place instead of remaining as raw TeX. The Markdown
+and image reader is an additional mode for opening documents from the terminal.
 
 Every successfully rendered formula is also ready to reuse—without selecting
 or retyping it:
@@ -36,7 +36,7 @@ visible TeX, renders it locally with MathJax, and places the result over the
 source text using the Kitty graphics protocol. The original text remains in
 the terminal buffer for copying.
 
-## Quick start: Codex in Ghostty
+## Quick start: OpenCode in Ghostty
 
 Install gtformula globally. With npm 11, allow the native setup scripts used by
 `node-pty` and the reader's `sharp` image pipeline:
@@ -51,16 +51,16 @@ Then start OpenCode through gtformula:
 gtformula opencode
 ```
 
-That is the complete integration—there is no Codex plugin or configuration to
-install. Codex itself must already be installed and available on your `PATH`.
+That is the complete integration—there is no OpenCode plugin or configuration to
+install. OpenCode itself must already be installed and available on your `PATH`.
 
 ## See it in action
 
-This example shows Codex explaining Maxwell's equations in Ghostty.
-TFormula detects the LaTeX in the live terminal output and renders the equations
+This example shows OpenCode explaining Maxwell's equations in Ghostty.
+gtformula detects the LaTeX in the live terminal output and renders the equations
 in place without replacing the surrounding text.
 
-![TFormula rendering Codex's Maxwell equations in Ghostty](assets/tformula-maxwell.png)
+![gtformula rendering OpenCode's Maxwell equations in Ghostty](assets/tformula-maxwell.png)
 
 ## Other CLI agents
 
@@ -90,7 +90,7 @@ Running `gtformula` without arguments is equivalent to `gtformula --shell`.
 
 ## Markdown reader
 
-Pass a Markdown, text, or image path instead of a command to open TFormula's
+Pass a Markdown, text, or image path instead of a command to open gtformula's
 full-screen document reader:
 
 ```sh
@@ -258,7 +258,7 @@ The current implementation has been developed against Ghostty 1.3.1.
 npm install
 npm run check
 npm link
-gtformula codex
+gtformula opencode
 ```
 
 ## Formula sizing

@@ -2,16 +2,16 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-直接在终端中渲染 **OpenAI Codex** 以及其他 CLI Agent 实时输出的科学公式，
+直接在终端中渲染 **OpenCode** 以及其他 CLI Agent 实时输出的科学公式，
 同时保持终端原有的完整交互能力。
 
-TFormula 最核心的用法就是：
+gtformula 最核心的用法就是：
 
 ```sh
 gtformula opencode
 ```
 
-Codex 仍然是原来的 Codex CLI，但回答中的公式会在终端中原位渲染，不再停留为
+OpenCode 仍然是原来的 OpenCode CLI，但回答中的公式会在终端中原位渲染，不再停留为
 原始 TeX。Markdown、文本和图片阅读器是用于打开本地文档的附加模式。
 
 每个成功渲染的公式也会立即变成可复用内容，不需要重新选择或输入：
@@ -33,30 +33,30 @@ headless 终端画面，检测其中的 TeX，使用本地 MathJax 渲染，再�
 图形协议把公式图片覆盖到原始文字上。原始 LaTeX 仍保留在终端缓冲区中，
 可以正常复制。
 
-## 快速开始：在 Ghostty 中运行 Codex
+## 快速开始：在 Ghostty 中运行 OpenCode
 
-推荐全局安装 TFormula。使用 npm 11 时，需要允许 `node-pty` 和阅读器的
+推荐全局安装 gtformula。使用 npm 11 时，需要允许 `node-pty` 和阅读器的
 `sharp` 图片管线执行原生安装脚本：
 
 ```sh
 npm install -g gtformula --allow-scripts=node-pty --allow-scripts=sharp
 ```
 
-然后通过 TFormula 启动 Codex：
+然后通过 gtformula 启动 OpenCode：
 
 ```sh
 gtformula opencode
 ```
 
-完整集成只有这一步，不需要安装 Codex 插件，也不需要修改 Codex 配置。Codex
+完整集成只有这一步，不需要安装 OpenCode 插件，也不需要修改 OpenCode 配置。OpenCode
 本身需要已经安装，并且可以从当前 `PATH` 中找到。
 
 ## 效果预览
 
-下面展示了在 Ghostty 中运行 Codex、介绍麦克斯韦方程时的效果。TFormula
+下面展示了在 Ghostty 中运行 OpenCode、介绍麦克斯韦方程时的效果。gtformula
 会检测实时终端输出中的 LaTeX，并在不替换周围文字的情况下原位渲染公式。
 
-![TFormula 在 Ghostty 中渲染 Codex 输出的麦克斯韦方程](assets/tformula-maxwell.png)
+![gtformula 在 Ghostty 中渲染 OpenCode 输出的麦克斯韦方程](assets/tformula-maxwell.png)
 
 ## 其他 CLI Agent
 
@@ -86,7 +86,7 @@ gtformula --shell
 
 ## Markdown 阅读器
 
-把 Markdown、文本或图片路径作为参数传入，即可进入 TFormula 的全屏阅读视图：
+把 Markdown、文本或图片路径作为参数传入，即可进入 gtformula 的全屏阅读视图：
 
 ```sh
 gtformula README.md
@@ -228,12 +228,12 @@ gtformula save 12ab34cd formula.png --scale 6 --color navy --background white
 ## 从源码安装
 
 ```sh
-git clone https://github.com/mikewang817/TFormula.git
+git clone https://github.com/GreenGdut/TFormula.git
 cd TFormula
 npm install
 npm run check
 npm link
-gtformula codex
+gtformula opencode
 ```
 
 ## 公式大小
